@@ -4,7 +4,7 @@ run-name: ${{ github.actor }} is deploying 🚀🚀🚀
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["python-development-environment"]  # This triggers the deployment after python-development-environment workflow completes
+    workflows: ["svelte-manga-api"]  # This triggers the deployment after svelte-manga-api workflow completes
     types:
       - completed
 

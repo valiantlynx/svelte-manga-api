@@ -1,6 +1,6 @@
-name: python-development-environment
+name: svelte-manga-api
 
-run-name: ${{ github.actor }} is building python-development-environment 🚀
+run-name: ${{ github.actor }} is building svelte-manga-api 🚀
 
 on:
   push:
@@ -21,7 +21,7 @@ on:
 
 jobs:
   build-and-push-images:
-    name: Build python-development-environment
+    name: Build svelte-manga-api
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -69,8 +69,8 @@ jobs:
       uses: docker/metadata-action@v3
       with:
         images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/python-development-environment
-          ghcr.io/${{ secrets.DOCKER_HUB_USERNAME }}/python-development-environment
+          ${{ secrets.DOCKER_HUB_USERNAME }}/svelte-manga-api
+          ghcr.io/${{ secrets.DOCKER_HUB_USERNAME }}/svelte-manga-api
         flavor: |
           latest=false
         tags: |

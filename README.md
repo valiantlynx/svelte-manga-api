@@ -14,12 +14,12 @@ docker-compose down
 # deployment
 there are two ways. one is simpler using azure container. it just deploys the app to your azure account.
 the 2nd option is more heavy duty but comes with more. while the first is just a container. the second one is a full on server. the server is a free tier ec2(if you only have one server).
-to choose, its the one in the workflows folder thats active. for azure have the deploy-azure.yml and python-development-environment.yml in the folder and the other two in the extra_workflows folder.
-for terraform have the deploy-terraform.yml, detroy.yml and python-development-environment.yml in the workflow folder and deploy-azure.yml in the extra_workflows folder
+to choose, its the one in the workflows folder thats active. for azure have the deploy-azure.yml and svelte-manga-api.yml in the folder and the other two in the extra_workflows folder.
+for terraform have the deploy-terraform.yml, detroy.yml and svelte-manga-api.yml in the workflow folder and deploy-azure.yml in the extra_workflows folder
 
 for both you need docker hub account
 # docker hub 
-go to https://hub.docker.com/settings/security and create and copy the token. together with your username go to (your repository)https://github.com/valiantlynx/python-development-environment/settings/secrets/actions and make these repository secrets
+go to https://hub.docker.com/settings/security and create and copy the token. together with your username go to (your repository)https://github.com/valiantlynx/svelte-manga-api/settings/secrets/actions and make these repository secrets
 - DOCKER_HUB_USERNAME = your username
 - DOCKER_HUB_PASSWORD = your docker access token
 
@@ -46,13 +46,13 @@ save it and go back to deployment center. your might have to redo some of the fo
 
 we need some env variables for authentication in git hub action. go back to overview and on the top is the option Download publish profile. copy the whole file and lets go to github
 
-first the login stuff. go to (your repository)https://github.com/valiantlynx/python-development-environment/settings/secrets/actions and make these repository secrets(you might see two env variables azure made delete them)
+first the login stuff. go to (your repository)https://github.com/valiantlynx/svelte-manga-api/settings/secrets/actions and make these repository secrets(you might see two env variables azure made delete them)
 if your planing to use azure
 - AZUREAPPSERVICE_PUBLISHPROFILE = the thing you downloaded and copied
 
 now the next time you commit to there is a succesfull pull or push to the main branch and the docker image is on docker hub then azure will redeploy
 
-to see the app azure provides a free url something like https://python-development-environment.azurewebsites.net/ go there and you might have to wait like 10 min the first time around. or make a commit to main again a couple times
+to see the app azure provides a free url something like https://svelte-manga-api.azurewebsites.net/ go there and you might have to wait like 10 min the first time around. or make a commit to main again a couple times
 
 # terrafrom
 this does alot for and is simpler to set up. 
@@ -60,11 +60,11 @@ this does alot for and is simpler to set up.
 simply put its IaC with terraform, config with ansible, monitoring with prometheus-grafana and service-check with uptime-kuma and container management with portainer.
 it all automated as well
 ## setup
-you need an aws account. in it make an s3 bucket called ´python-development-environment´ it can be anything it just has to match with the one in terraform/provider.tf aws. 
+you need an aws account. in it make an s3 bucket called ´svelte-manga-api´ it can be anything it just has to match with the one in terraform/provider.tf aws. 
 and lastly access keys, you can get thenm in IAM. just create access key cause we need both the key and the secret
 ![accesskey](assets/image6.png)
 
-the login stuff. go to (your repository)https://github.com/valiantlynx/python-development-environment/settings/secrets/actions and make these repository secrets
+the login stuff. go to (your repository)https://github.com/valiantlynx/svelte-manga-api/settings/secrets/actions and make these repository secrets
 if your planing to use azure
 - AWS_ACCESS_KEY = that you copied
 - AWS_SECRET_ACCESS_KEY = the secret you copied

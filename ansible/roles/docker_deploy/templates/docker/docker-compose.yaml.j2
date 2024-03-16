@@ -2,9 +2,9 @@
 version: '3.8'
 
 services:
-  python-development-environment:
-    image: valiantlynx/python-development-environment:latest
-    container_name: python-development-environment
+  svelte-manga-api:
+    image: valiantlynx/svelte-manga-api:latest
+    container_name: svelte-manga-api
     restart: always
     networks:
       - monitoring
@@ -21,7 +21,7 @@ services:
       - ./certbot/logs:/var/log/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
-      - python-development-environment
+      - svelte-manga-api
     restart: unless-stopped
     networks:
       - monitoring  
