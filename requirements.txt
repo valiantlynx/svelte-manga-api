@@ -1,3 +1,5 @@
 fastapi
 uvicorn
 debugpy
+httpx
+beautifulsoup4
