@@ -62,13 +62,12 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
     return manga_details
 
 @app.get("/api/manga/{manga_id}/{chapter_id}")
-async def get_manga_chapter_details(manga_id: str, chapter_id: str):
+async def get_manga_chapter_details(manga_id: str, chapter_id: str, server: str = Query(default='MANGANELO'),):
     server_map = {
         "MANGANELO": ManganeloScraper,
         # Add other servers if they have a similar endpoint for fetching chapter details
     }
 
-    server = 'MANGANELO'  # Assuming a single server for simplicity; adjust as needed
     base_url = os.getenv(server)
     
     if base_url is None or server not in server_map:
@@ -79,3 +78,22 @@ async def get_manga_chapter_details(manga_id: str, chapter_id: str):
     chapter_details = await scraper.get_chapter_details(manga_id=manga_id, chapter_id=chapter_id)
     
     return JSONResponse(content=chapter_details)
+
+@app.get("/api/search")
+async def search_manga(word: str, page: Optional[int] = 1, server: str = Query(default='MANGANELO')):
+    server_map = {
+        "MANGANELO": ManganeloScraper,  # Assuming ManganeloScraper can handle search queries
+        # Add other servers if they have a similar endpoint for search
+    }
+
+    base_url = os.getenv(server)
+    
+    if base_url is None or server not in server_map:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    scraper_class = server_map[server]
+    scraper = scraper_class(base_url)
+    search_results = await scraper.search_manga(word=word, page=page)
+    
+    return search_results
+

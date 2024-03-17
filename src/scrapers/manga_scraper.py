@@ -124,6 +124,41 @@ class ManganeloScraper(BaseScraper):
             "images": image_data
         }
 
+    async def search_manga(self, word: str, page: int = 1):
+        search_url = f"{self.base_url}/search/{word}?page={page}"
+        html = await self.fetch_html(search_url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        search_results = []
+        for item in soup.select('.search-story-item'):
+            titleElement = item.select_one('.item-title')
+            imgElement = item.select_one('img')
+            chaptersElement = item.select_one('.item-title')  # Assuming this is correct; adjust if needed
+            srcElement = item.select_one('a')
+            authorElement = item.select_one('.item-author')
+
+            title = titleElement.text.strip() if titleElement else "No title"
+            img = imgElement.get('src', '') if imgElement else "No image"
+            latestChapter = chaptersElement.text.strip() if chaptersElement else "No chapters"
+            src = srcElement.get('href', '') if srcElement else "No source"
+            author = authorElement.text.strip() if authorElement else "No author"
+
+            mangaId = src.split('/')[-1] if src else "No ID"
+
+            search_results.append({
+                "title": title,
+                "img": img,
+                "latestChapter": latestChapter,
+                "src": src,
+                "mangaId": mangaId,
+                "author": author,
+            })
+
+        return {
+            "page": page,
+            "results": search_results
+        }
+
 
 class ChapMangaScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
