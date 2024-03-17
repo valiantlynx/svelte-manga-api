@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from .scrapers.manga_scraper import ManganeloScraper, ChapMangaScraper, MangaClashScraper
 from dotenv import load_dotenv
 import os
@@ -59,3 +60,22 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
     scraper = scraper_class(base_url)
     manga_details = await scraper.get_manga_details(manga_id=manga_id)
     return manga_details
+
+@app.get("/api/manga/{manga_id}/{chapter_id}")
+async def get_manga_chapter_details(manga_id: str, chapter_id: str):
+    server_map = {
+        "MANGANELO": ManganeloScraper,
+        # Add other servers if they have a similar endpoint for fetching chapter details
+    }
+
+    server = 'MANGANELO'  # Assuming a single server for simplicity; adjust as needed
+    base_url = os.getenv(server)
+    
+    if base_url is None or server not in server_map:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    scraper_class = server_map[server]
+    scraper = scraper_class(base_url)
+    chapter_details = await scraper.get_chapter_details(manga_id=manga_id, chapter_id=chapter_id)
+    
+    return JSONResponse(content=chapter_details)
