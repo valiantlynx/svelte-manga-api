@@ -29,7 +29,8 @@
         "vscode-icons-team.vscode-icons",
         "esbenp.prettier-vscode",
         "jpotterm.simple-vim",
-        "wakatime.vscode-wakatime"
+        "wakatime.vscode-wakatime",
+        "ms-azuretools.vscode-docker"
       ],
       "settings": {
         "python.pythonPath": "/usr/local/bin/python",

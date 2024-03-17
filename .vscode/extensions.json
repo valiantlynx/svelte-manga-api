@@ -22,7 +22,8 @@
     "visualstudioexptteam.vscodeintellicode",
     "vscode-icons-team.vscode-icons",
     "esbenp.prettier-vscode",
-    "wakatime.vscode-wakatime"
+    "wakatime.vscode-wakatime",
+    "ms-azuretools.vscode-docker"
   ]
 }
 

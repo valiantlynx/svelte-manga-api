@@ -1,3 +1,5 @@
 {
-	"i18n-ally.localesPaths": ["src/lib/i18n", "src/lib/i18n/locales"],
+    "python.languageServer": "Pylance",
+    "python.analysis.extraPaths": ["../"],
+    "python.formatting.provider": "prettier",
 }
