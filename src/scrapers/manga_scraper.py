@@ -101,6 +101,29 @@ class ManganeloScraper(BaseScraper):
             "episodes": chapters,
         }
 
+    async def get_chapter_details(self, manga_id: str, chapter_id: str):
+        # Construct the chapter URL based on manga_id and chapter_id
+        chapter_url = f"{self.base_url}/chapter/{manga_id}/{chapter_id}"  # Adjust as necessary
+        html = await self.fetch_html(chapter_url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        title = soup.select_one('.panel-chapter-info-top h1').text
+        images = soup.select('.container-chapter-reader img')
+        
+        image_data = []
+        for index, img in enumerate(images, start=1):
+            image_url = img.get('data-src')  # Use 'src' if 'data-src' is not available
+            image_data.append({
+                "imageUrl": image_url,
+                "pageNumber": index,
+                "totalPages": len(images)
+            })
+
+        return {
+            "title": title,
+            "images": image_data
+        }
+
 
 class ChapMangaScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
