@@ -1,9 +1,12 @@
 from .base_scraper import BaseScraper
 from bs4 import BeautifulSoup
 from typing import Optional
- 
+from datetime import datetime
+import re
+
+
 class ManganeloScraper(BaseScraper):
-    async def scrape(self, page: Optional[int] = None, genre: Optional[str] = None, type: Optional[str] = None):   
+    async def scrape(self, page: Optional[int] = None, genre: Optional[str] = None, type: Optional[str] = None):
         # Apply default values if None
         page = page or '1'  # Default page
         genre = genre or 'Isekai'  # Default genre
@@ -48,39 +51,42 @@ class ManganeloScraper(BaseScraper):
             mangas.append(content)
 
         return mangas
-    
+
     async def get_manga_details(self, manga_id: str):
-        url = f"{self.base_url}/manga/{manga_id}"  # Adjust URL based on actual path structure
+        url = f"{self.base_url}/manga/{manga_id}"
         html = await self.fetch_html(url)
         soup = BeautifulSoup(html, 'html.parser')
 
         title = soup.select_one('.story-info-right h1').text
         img = soup.select_one('.info-image img')['src']
-        description = soup.select_one('#panel-story-info-description').text.strip()
+        description = soup.select_one(
+            '#panel-story-info-description').text.strip()
 
         # Extracting authors and genres
-        all_elements = [elem.text.strip() for elem in soup.select('.table-value a')]
-        if all_elements:
-            authors = [all_elements[0]]
-            genres = all_elements[1:] 
-        else:
-            authors = []
-            genres = [] 
-            
-        rating_element = soup.select_one('[property="v:average"]')
-        rating = rating_element.text if rating_element else 'N/A'  # Default to 'N/A' if not found
-        
-        # Extracting last updated date and views
-        lastUpdatedElement = soup.select_one(".story-info-right-extent .stre-value:nth-of-type(1)")
-        lastUpdated = lastUpdatedElement.text.strip() if lastUpdatedElement else "Unknown"
+        all_elements = [elem.text.strip()
+                        for elem in soup.select('.table-value a')]
+        authors = [all_elements[0]] if all_elements else []
+        genres = all_elements[1:] if len(all_elements) > 1 else []
 
-        viewsElement = soup.select_one(".story-info-right-extent .stre-value:nth-of-type(2)")
-        views = viewsElement.text.strip() if viewsElement else "Unknown"
+        rating_element = soup.select_one('[property="v:average"]')
+        rating = float(rating_element.text) if rating_element else None
+
+        # Extracting and converting last updated date
+        lastUpdated_text = soup.select_one(
+            '.story-info-right-extent p:nth-of-type(1) .stre-value').text.strip()
+        lastUpdated = datetime.strptime(
+            lastUpdated_text, "%b %d,%Y - %I:%M %p") if lastUpdated_text else None
+
+        # Extracting and converting views
+        views_text = soup.select_one(
+            '.story-info-right-extent p:nth-of-type(2) .stre-value').text.strip()
+        views = float(re.sub(r'[KM]', lambda x: "e3" if x.group(
+            0) == 'K' else "e6", views_text)) if views_text else 0
 
         chapters = [{
             "src": c['href'],
             "chapterId": c['href'].split('/')[-1],
-            "chapterTitle": c.text
+            "chapterTitle": c.text.strip()
         } for c in soup.select('.chapter-name')]
 
         return {
@@ -90,15 +96,16 @@ class ManganeloScraper(BaseScraper):
             "authors": authors,
             "rating": rating,
             "genres": genres,
-            "lastUpdated": lastUpdated,
+            "lastUpdated": lastUpdated.strftime("%Y-%m-%d %H:%M") if lastUpdated else "Unknown",
             "views": views,
             "episodes": chapters,
         }
 
+
 class ChapMangaScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
         genre = genre or 'genre-45'  # Default genre
-        
+
         html = await self.fetch_html(f"{self.base_url}/{genre}")
         soup = BeautifulSoup(html, 'html.parser')
         mangas = []
@@ -115,11 +122,12 @@ class ChapMangaScraper(BaseScraper):
             })
 
         return mangas
-    
+
+
 class MangaClashScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
         genre = genre or 'genre'  # Default genre
-        
+
         html = await self.fetch_html(f"{self.base_url}/{genre}")
         soup = BeautifulSoup(html, 'html.parser')
         mangas = []
