@@ -49,8 +49,7 @@ class ManganeloScraper(BaseScraper):
             mangas.append(content)
 
         return mangas
-
-    
+ 
 class ChapMangaScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
         genre = genre or 'genre-45'  # Default genre

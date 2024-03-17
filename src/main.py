@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Optional
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .scrapers.manga_scraper import ManganeloScraper, ChapMangaScraper, MangaClashScraper
@@ -23,10 +23,6 @@ debugpy.listen(("0.0.0.0", 5678))
 def read_root():
     return {"Hello": "World ass wiper"}
 
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
 
 @app.get("/api/manga")
 async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[str] = None, page: Optional[int] = None, type: Optional[str] = None):
