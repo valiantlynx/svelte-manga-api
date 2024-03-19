@@ -1,3 +1,4 @@
+import debugpy
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,9 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
- 
-import debugpy
+
 debugpy.listen(("0.0.0.0", 5678))
+
 
 @app.get("/")
 def read_root():
@@ -46,8 +47,9 @@ async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[st
     mangas = await scraper.scrape(genre=genre, page=page, type=type)
     return {"mangas": mangas}
 
+
 @app.get("/api/manga/{manga_id}")
-async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: str = Path(...)):
+async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: str = Path(..., example="manga-tf996688")):
     server_map = {
         "MANGANELO": ManganeloScraper,
         # Add other servers if they have a similar endpoint for fetching manga details
@@ -62,66 +64,73 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
     manga_details = await scraper.get_manga_details(manga_id=manga_id)
     return manga_details
 
+
 @app.get("/api/manga/{manga_id}/{chapter_id}")
-async def get_manga_chapter_details(manga_id: str, chapter_id: str, server: str = Query(default='MANGANELO'),):
+async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf996688"), chapter_id: str = Path(..., example="chapter-1"), server: str = Query(default='MANGANELO'),):
     server_map = {
         "MANGANELO": ManganeloScraper,
         # Add other servers if they have a similar endpoint for fetching chapter details
     }
 
     base_url = os.getenv(server)
-    
+
     if base_url is None or server not in server_map:
         raise HTTPException(status_code=404, detail="Server not found")
 
     scraper_class = server_map[server]
     scraper = scraper_class(base_url)
     chapter_details = await scraper.get_chapter_details(manga_id=manga_id, chapter_id=chapter_id)
-    
+
     return JSONResponse(content=chapter_details)
 
+
 @app.get("/api/search")
-async def search_manga(word: str, page: Optional[int] = 1, server: str = Query(default='MANGANELO')):
+async def search_manga(word: str = Query(..., example="eternal"), page: Optional[int] = 1, server: str = Query(default='MANGANELO')):
     server_map = {
         "MANGANELO": ManganeloScraper,  # Assuming ManganeloScraper can handle search queries
         # Add other servers if they have a similar endpoint for search
     }
 
     base_url = os.getenv(server)
-    
+
     if base_url is None or server not in server_map:
         raise HTTPException(status_code=404, detail="Server not found")
 
+    print(word, page)
     scraper_class = server_map[server]
     scraper = scraper_class(base_url)
     search_results = await scraper.search_manga(word=word, page=page)
-    
+
     return search_results
 
+
 @app.get("/api/getimage")
-async def get_image(url: str = Query(..., alias="url")):
+async def get_image(url: str = Query(..., alias="url", example="https://cm.blazefast.co/a4/45/a4458a2fadf6cd005dc1a92a6ab8e4b3.jpg")):
     if not url:
         raise HTTPException(status_code=400, detail="No image URL provided")
-    
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
             response.raise_for_status()
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=500, detail=f"Failed to fetch image: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to fetch image: {str(exc)}")
 
     return StreamingResponse(response.iter_bytes(), media_type=response.headers["Content-Type"])
 
+
 @app.get("/api/mangaimage/{image}")
 async def get_image_from_path(
-    server: str = Query(default='MANGANELO'), 
-    image: str = Path(...)
+    server: str = Query(default='MANGANELO'),
+    image: str = Path(..., example="manga-tf996688.jpg")
 ):
     # Dynamically determining the base URL based on the server parameter
     # Fetch the base URL from environment variables using the server name
     base_url = os.getenv(server)
     if not base_url:
-        raise HTTPException(status_code=404, detail=f"Server {server} not found or base URL not configured")
+        raise HTTPException(
+            status_code=404, detail=f"Server {server} not found or base URL not configured")
 
     image_url = f"{base_url}/mangaimage/{image}"
 
@@ -130,25 +139,28 @@ async def get_image_from_path(
             response = await client.get(image_url)
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
-            raise HTTPException(status_code=500, detail=f"Failed to fetch image: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to fetch image: {str(exc)}")
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=500, detail=f"Request error: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Request error: {str(exc)}")
 
     return StreamingResponse(response.iter_bytes(), media_type=response.headers["Content-Type"])
 
 
 @app.get("/api/{id1}/{id2}/{image}")
 async def get_image_from_path(
-    server: str = Query(default='MANGANELO'), 
-    id1: str = Path(...), 
-    id2: str = Path(...), 
-    image: str = Path(...)
+    server: str = Query(default='MANGANELO'),
+    id1: str = Path(..., example="a4"),
+    id2: str = Path(..., example="45"),
+    image: str = Path(..., example="a4458a2fadf6cd005dc1a92a6ab8e4b3.jpg")
 ):
     # Dynamically determining the base URL based on the server parameter
     # Fetch the base URL from environment variables using the server name
     base_url = os.getenv(server.upper() + "_CDN")
     if not base_url:
-        raise HTTPException(status_code=404, detail=f"Server {server} not found or base URL not configured")
+        raise HTTPException(
+            status_code=404, detail=f"Server {server} not found or base URL not configured")
 
     image_url = f"{base_url}/{id1}/{id2}/{image}"
 
@@ -157,8 +169,10 @@ async def get_image_from_path(
             response = await client.get(image_url)
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
-            raise HTTPException(status_code=500, detail=f"Failed to fetch image: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to fetch image: {str(exc)}")
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=500, detail=f"Request error: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Request error: {str(exc)}")
 
     return StreamingResponse(response.iter_bytes(), media_type=response.headers["Content-Type"])
