@@ -93,10 +93,10 @@ async def search_manga(word: str = Query(..., example="eternal"), page: Optional
 
     base_url = os.getenv(server)
 
+    print(base_url)
     if base_url is None or server not in server_map:
         raise HTTPException(status_code=404, detail="Server not found")
 
-    print(word, page)
     scraper_class = server_map[server]
     scraper = scraper_class(base_url)
     search_results = await scraper.search_manga(word=word, page=page)

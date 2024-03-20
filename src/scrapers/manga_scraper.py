@@ -4,6 +4,25 @@ from typing import Optional
 from datetime import datetime
 import re
 
+def parse_date(date_str):
+    # Define multiple formats to try
+    date_formats = [
+        "%b %d,%Y - %H:%M %p", # Adjusted for 24-hour format and AM/PM
+        "%b %d, %Y - %H:%M %p", # Adjusted for space after the comma and 24-hour format
+        "%b %d,%Y - %I:%M %p", # Your original format
+        # Add more formats as necessary
+    ]
+    
+    # Remove any potential extra spaces (for more robust parsing)
+    date_str = re.sub(r'\s+', ' ', date_str)
+    
+    for fmt in date_formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue  # Try the next format if current one fails
+    return None  # Return None if all formats fail
+
 
 class ManganeloScraper(BaseScraper):
     async def scrape(self, page: Optional[int] = None, genre: Optional[str] = None, type: Optional[str] = None):
@@ -59,8 +78,11 @@ class ManganeloScraper(BaseScraper):
 
         title = soup.select_one('.story-info-right h1').text
         img = soup.select_one('.info-image img')['src']
-        description = soup.select_one(
+        description_raw = soup.select_one(
             '#panel-story-info-description').text.strip()
+
+        # Remove "Description :" if it's at the beginning using regex
+        description = re.sub(r'^Description\s*:\s*', '', description_raw, flags=re.IGNORECASE)
 
         # Extracting authors and genres
         all_elements = [elem.text.strip()
@@ -72,10 +94,8 @@ class ManganeloScraper(BaseScraper):
         rating = float(rating_element.text) if rating_element else None
 
         # Extracting and converting last updated date
-        lastUpdated_text = soup.select_one(
-            '.story-info-right-extent p:nth-of-type(1) .stre-value').text.strip()
-        lastUpdated = datetime.strptime(
-            lastUpdated_text, "%b %d,%Y - %I:%M %p") if lastUpdated_text else None
+        lastUpdated_text = soup.select_one('.story-info-right-extent p:nth-of-type(1) .stre-value').text.strip()
+        lastUpdated = parse_date(lastUpdated_text)
 
         # Extracting and converting views
         views_text = soup.select_one(
@@ -98,7 +118,7 @@ class ManganeloScraper(BaseScraper):
             "genres": genres,
             "lastUpdated": lastUpdated.strftime("%Y-%m-%d %H:%M") if lastUpdated else "Unknown",
             "views": views,
-            "episodes": chapters,
+            "chapters": chapters,
         }
 
     async def get_chapter_details(self, manga_id: str, chapter_id: str):
@@ -119,9 +139,13 @@ class ManganeloScraper(BaseScraper):
                 "totalPages": len(images)
             })
 
+        # fetch the manga data
+        manga = await self.get_manga_details(manga_id)
+
         return {
             "title": title,
-            "images": image_data
+            "images": image_data,
+            "manga": manga
         }
 
     async def search_manga(self, word: str, page: int = 1):
@@ -156,7 +180,7 @@ class ManganeloScraper(BaseScraper):
 
         return {
             "page": page,
-            "results": search_results
+            "mangas": search_results
         }
 
 
