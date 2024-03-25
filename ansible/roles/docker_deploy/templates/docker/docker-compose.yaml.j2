@@ -6,6 +6,9 @@ services:
     image: valiantlynx/svelte-manga-api:latest
     container_name: svelte-manga-api
     restart: always
+    ports:
+      - 8000:8000
+      - 5678:5678
     networks:
       - monitoring
 
