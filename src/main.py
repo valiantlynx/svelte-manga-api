@@ -1,4 +1,5 @@
 import debugpy
+from prometheus_fastapi_instrumentator import Instrumentator
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -176,3 +177,5 @@ async def get_image_from_path(
                 status_code=500, detail=f"Request error: {str(exc)}")
 
     return StreamingResponse(response.iter_bytes(), media_type=response.headers["Content-Type"])
+
+Instrumentator().instrument(app).expose(app)
