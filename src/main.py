@@ -53,7 +53,8 @@ async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[st
 async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: str = Path(..., example="manga-tf996688")):
     server_map = {
         "MANGANELO": ManganeloScraper,
-        # Add other servers if they have a similar endpoint for fetching manga details
+        "CHAPMANGANELO": ChapMangaScraper,
+        "MANGACLASH": MangaClashScraper,
     }
 
     base_url = os.getenv(server)
@@ -70,7 +71,8 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
 async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf996688"), chapter_id: str = Path(..., example="chapter-1"), server: str = Query(default='MANGANELO'),):
     server_map = {
         "MANGANELO": ManganeloScraper,
-        # Add other servers if they have a similar endpoint for fetching chapter details
+        "CHAPMANGANELO": ChapMangaScraper,
+        "MANGACLASH": MangaClashScraper,
     }
 
     base_url = os.getenv(server)
@@ -88,8 +90,9 @@ async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf9
 @app.get("/api/search")
 async def search_manga(word: str = Query(..., example="eternal"), page: Optional[int] = 1, server: str = Query(default='MANGANELO')):
     server_map = {
-        "MANGANELO": ManganeloScraper,  # Assuming ManganeloScraper can handle search queries
-        # Add other servers if they have a similar endpoint for search
+        "MANGANELO": ManganeloScraper,
+        "CHAPMANGANELO": ChapMangaScraper,
+        "MANGACLASH": MangaClashScraper,
     }
 
     base_url = os.getenv(server)
