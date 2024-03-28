@@ -7,3 +7,4 @@ python-dotenv
 prometheus-fastapi-instrumentator
 langchain
 pydantic
+opencv-python
