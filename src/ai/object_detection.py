@@ -49,3 +49,4 @@ for result in data:
 
 # Save the image after processing
 cv2.imwrite("after_model.jpg", image)
+
