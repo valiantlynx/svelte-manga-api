@@ -3,4 +3,6 @@
   roles:
     - common
     - docker
+    - ec2-swap
     - docker_deploy
+
