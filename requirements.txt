@@ -8,3 +8,8 @@ prometheus-fastapi-instrumentator
 langchain
 pydantic
 opencv-python
+
+# recomendation engine
+lancedb
+pandas
+pytest
