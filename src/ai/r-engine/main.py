@@ -59,8 +59,11 @@ if __name__ == "__main__":
     for i in range(len(movies)):
         data.append({"id": movies.iloc[i]["movie id"], "title": movies.iloc[i]
                     ['title'], "vector": vectors[i], "genre": movies.iloc[i]['genres']})
-    print(pd.DataFrame(data))
-
+        
+    df =  pd.DataFrame(data)
+    print(df)
+    df.to_csv("demofile2.csv", sep='\t', encoding='utf-8')
+   
     # Connect to LanceDB
 
     db = lancedb.connect("./data/test-db")
