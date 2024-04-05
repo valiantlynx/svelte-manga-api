@@ -111,6 +111,14 @@
   args:
     chdir: "{{ ansible_env.HOME }}/"
 
+- name: Schedule Delete all hanging stuff every hour
+  become: true
+  ansible.builtin.cron:
+    name: "Delete all hanging stuff regularly"
+    special_time: "hourly"
+    job: "cd {{ ansible_env.HOME }} && docker system prune -a -f"
+    user: ubuntu
+
 - name: Schedule automated certificate renewal
   ansible.builtin.cron:
     name: "Renew Let's Encrypt certificates"
