@@ -13,7 +13,7 @@ COPY ./src ./src
 
 EXPOSE 8000
 
-ENV MANGANELO="https://ww7.manganelo.tv"
+ENV MANGANELO="https://ww8.manganelo.tv"
 ENV CHAPMANGANELO="https://chapmanganelo.com"
 ENV MANGACLASH="https://mangaclash.com"
 ENV MANGAPARK="https://mangapark.net"
