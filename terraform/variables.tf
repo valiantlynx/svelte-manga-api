@@ -32,6 +32,11 @@ variable "cloudflare_zone_ids" {
           name    = "svelte-manga-api",
           service = "svelte-manga-api",
           port    = 8000
+        },
+        {
+          name    = "manga-api",
+          service = "svelte-manga-api",
+          port    = 8000
         }
       ],
       include_root = false,

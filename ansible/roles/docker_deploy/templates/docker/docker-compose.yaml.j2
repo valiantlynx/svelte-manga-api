@@ -1,11 +1,19 @@
 ---
-version: '3.8'
+version: '2.4'
 
 services:
   svelte-manga-api:
     image: valiantlynx/svelte-manga-api:latest
     container_name: svelte-manga-api
-    restart: always
+    restart: unless-stopped
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    mem_limit: 500m
+    memswap_limit: 500m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://svelte-manga-api.valiantlynx.com"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     ports:
       - 8000:8000
       - 5678:5678
