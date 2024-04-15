@@ -1,5 +1,0 @@
-shows how to build a movie recommender system using SVD, a collaborative filtering method. The dataset used is the generated form the manga database but can test it with [MovieLens Latest Small Dataset](https://grouplens.org/datasets/movielens/latest/).
-
-## Collaborative Filtering
-
-Collaborative filtering represents a fundamental method employed within numerous recommendation systems, facilitating the prognostication of user preferences by leveraging data derived from other users. This technique is grounded in the assumption that users who have exhibited comparable preferences historically are inclined to continue exhibiting congruent preferences in the future. `Singular Value Decomposition (SVD)` emerges as a precise `matrix factorization` technique employed for effecting such predictions. In the context of constructing our movie recommender, we will harness the implementation of SVD provided by the Numpy library.
