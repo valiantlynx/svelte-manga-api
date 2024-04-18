@@ -10,7 +10,7 @@ docker-compose up --build -d
 docker-compose down
 ```
 
-# (Optional) everything after this is optional
+# (Optional) everything after this is optional (this has changed to include ddns)
 # deployment
 there are two ways. one is simpler using azure container. it just deploys the app to your azure account.
 the 2nd option is more heavy duty but comes with more. while the first is just a container. the second one is a full on server. the server is a free tier ec2(if you only have one server).
