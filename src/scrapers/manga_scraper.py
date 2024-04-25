@@ -27,9 +27,12 @@ def parse_date(date_str):
 class ManganeloScraper(BaseScraper):
     async def scrape(self, page: Optional[int] = None, genre: Optional[str] = None, type: Optional[str] = None):
         # Apply default values if None
-        page = page or '1'  # Default page
-        genre = genre or 'Isekai'  # Default genre
-        type = type or 'topview'  # Default type
+        page = page or '1'
+        if genre == "All":
+            genre = ""
+        else:
+            genre = genre or 'Isekai'
+        type = type or 'topview'
 
         html = await self.fetch_html(f"{self.base_url}/genre/{genre}?type={type}&page={page}")
         soup = BeautifulSoup(html, 'html.parser')
