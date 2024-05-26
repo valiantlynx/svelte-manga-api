@@ -242,9 +242,17 @@ class MangaClashScraper(BaseScraper):
 
     async def get_manga_details(self, manga_id: str):
         url = f"{self.base_url}/manga/{manga_id}"
-        html = await self.fetch_html(url)
+        # Use httpx to handle the redirection
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url)
+            if response.status_code == 301:
+                logging.warning(f"Redirected to {response.headers['location']}")
+            response.raise_for_status()
+            html = response.text
+
         soup = BeautifulSoup(html, 'html.parser')
 
+        
         title = soup.select_one('.post-title h1').text.strip()
         img = soup.select_one('.summary_image img')['src']
         description_raw = soup.select_one('.description-summary').text.strip()
@@ -256,19 +264,21 @@ class MangaClashScraper(BaseScraper):
         authors = [a.text.strip() for a in soup.select('.author-content a')]
         genres = [g.text.strip() for g in soup.select('.genres-content a')]
 
-        rating_element = soup.select_one('.summary-content.vote .total_votes')
+        rating_element = soup.select_one('.total_votes')
+        logging.warning(f"---------> {rating_element}")
         rating = float(rating_element.text) if rating_element else None
 
         lastUpdated_text = soup.select_one('.post-status .summary-content')
-        lastUpdated = parse_date(
-            lastUpdated_text.text.strip()) if lastUpdated_text else None
-
+        
+        lastUpdated = lastUpdated_text.text.strip() if lastUpdated_text else None
         chapters = [{
             "src": c.select_one('a')['href'],
-            "chapterId": c.select_one('a')['href'].split('/')[-1],
-            "chapterTitle": c.select_one('.chapter-title').text.strip(),
+            "chapterId": c.select_one('a')['href'].split('/')[-2], 
+            "chapterTitle": c.select_one('a').text.strip(),
+            "new": c.select_one('.c-new-tag')['title'] if c.select_one('.c-new-tag') else None  
         } for c in soup.select('.wp-manga-chapter')]
 
+        
         return {
             "title": title,
             "img": img,
@@ -276,7 +286,7 @@ class MangaClashScraper(BaseScraper):
             "authors": authors,
             "rating": rating,
             "genres": genres,
-            "lastUpdated": lastUpdated.strftime("%Y-%m-%d %H:%M") if lastUpdated else "Unknown",
+            "lastUpdated": lastUpdated or "Unknown",
             "chapters": chapters,
         }
 
