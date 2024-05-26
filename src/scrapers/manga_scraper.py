@@ -202,11 +202,9 @@ class MangaClashScraper(BaseScraper):
         genre = genre or 'latest'
 
         url = f"{self.base_url}/manga/page/{page}/?m_orderby={genre}"
-        logging.warning(f"rrrrr ------ {url}")
         # Use httpx to handle the redirection
         async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(url)
-            logging.warning(f"rrrrr ------ {response}")
             if response.status_code == 301:
                 logging.warning(f"Redirected to {response.headers['location']}")
             response.raise_for_status()
@@ -216,22 +214,20 @@ class MangaClashScraper(BaseScraper):
 
         mangas = []
 
-        for item in soup.select('.list-truyen-item-wrap'):
+        for item in soup.select('.manga'):
             titleElement = item.select_one('h3 a')
             imgElement = item.select_one('img')
-            latestChapterElement = item.select_one(
-                '.list-story-item-wrap-chapter a')
+            latestChapterElement = item.select_one('.chapter a')
             descriptionElement = item.select_one('.list-story-item-wrap-1 p')
 
             title = titleElement.text.strip() if titleElement else "No title"
             img = imgElement.get('data-src', '') if imgElement else "No image"
-            latestChapter = latestChapterElement.text.strip(
-            ) if latestChapterElement else "No chapters"
+            latestChapter = latestChapterElement.text.strip() if latestChapterElement else "No chapters"
             src = titleElement['href'] if titleElement else "No source"
-            description = descriptionElement.text.strip(
-            ) if descriptionElement else "No description"
+            description = descriptionElement.text.strip() if descriptionElement else "No description"
 
-            mangaId = src.split('/')[-1] if src else "No ID"
+            # Extract the manga ID by stripping the domain and using the slug
+            mangaId = src.split('/')[-2] if src else "No ID"
 
             mangas.append({
                 "title": title,
