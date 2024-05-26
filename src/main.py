@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-from .scrapers.manga_scraper import ManganeloScraper, ChapMangaScraper, MangaClashScraper
+from .scrapers.manga_scraper import ManganeloScraper, MangaClashScraper, MangaKissScraper, KissMangaScraper, ManhuaTopScraper, MangaParkIoScraper, MangaParkNetScraper, ManhuaFastScraper, RMangaScraper, ReadMangaScraper
 from dotenv import load_dotenv
 import httpx
 import os
@@ -33,9 +33,18 @@ async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[st
     # Map server names to their corresponding scrapers
     server_map = {
         "MANGANELO": ManganeloScraper,
-        "CHAPMANGANELO": ChapMangaScraper,
         "MANGACLASH": MangaClashScraper,
+        "MANGAKISS": MangaKissScraper,
+        "KISSMANGA": KissMangaScraper,
+        "MANHUATOP": ManhuaTopScraper,
+        "MANGAPARK_IO": MangaParkIoScraper,
+        "MANGAPARK_NET": MangaParkNetScraper,
+        "MANHUAFAST": ManhuaFastScraper,
+        "RMANGA": RMangaScraper,
+        "READMANGA": ReadMangaScraper,
     }
+
+
 
     # Fetch the base URL from environment variables
     base_url = os.getenv(server)
@@ -53,9 +62,17 @@ async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[st
 async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: str = Path(..., example="manga-tf996688")):
     server_map = {
         "MANGANELO": ManganeloScraper,
-        "CHAPMANGANELO": ChapMangaScraper,
         "MANGACLASH": MangaClashScraper,
+        "MANGAKISS": MangaKissScraper,
+        "KISSMANGA": KissMangaScraper,
+        "MANHUATOP": ManhuaTopScraper,
+        "MANGAPARK_IO": MangaParkIoScraper,
+        "MANGAPARK_NET": MangaParkNetScraper,
+        "MANHUAFAST": ManhuaFastScraper,
+        "RMANGA": RMangaScraper,
+        "READMANGA": ReadMangaScraper,
     }
+
 
     base_url = os.getenv(server)
     if base_url is None or server not in server_map:
@@ -71,9 +88,17 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
 async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf996688"), chapter_id: str = Path(..., example="chapter-1"), server: str = Query(default='MANGANELO'),):
     server_map = {
         "MANGANELO": ManganeloScraper,
-        "CHAPMANGANELO": ChapMangaScraper,
         "MANGACLASH": MangaClashScraper,
+        "MANGAKISS": MangaKissScraper,
+        "KISSMANGA": KissMangaScraper,
+        "MANHUATOP": ManhuaTopScraper,
+        "MANGAPARK_IO": MangaParkIoScraper,
+        "MANGAPARK_NET": MangaParkNetScraper,
+        "MANHUAFAST": ManhuaFastScraper,
+        "RMANGA": RMangaScraper,
+        "READMANGA": ReadMangaScraper,
     }
+
 
     base_url = os.getenv(server)
 
@@ -91,9 +116,17 @@ async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf9
 async def search_manga(word: str = Query(..., example="eternal"), page: Optional[int] = 1, server: str = Query(default='MANGANELO')):
     server_map = {
         "MANGANELO": ManganeloScraper,
-        "CHAPMANGANELO": ChapMangaScraper,
         "MANGACLASH": MangaClashScraper,
+        "MANGAKISS": MangaKissScraper,
+        "KISSMANGA": KissMangaScraper,
+        "MANHUATOP": ManhuaTopScraper,
+        "MANGAPARK_IO": MangaParkIoScraper,
+        "MANGAPARK_NET": MangaParkNetScraper,
+        "MANHUAFAST": ManhuaFastScraper,
+        "RMANGA": RMangaScraper,
+        "READMANGA": ReadMangaScraper,
     }
+
 
     base_url = os.getenv(server)
 

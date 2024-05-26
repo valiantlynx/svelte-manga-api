@@ -187,28 +187,6 @@ class ManganeloScraper(BaseScraper):
         }
 
 
-class ChapMangaScraper(BaseScraper):
-    async def scrape(self, genre: Optional[str] = None):
-        genre = genre or 'genre-45'  # Default genre
-
-        html = await self.fetch_html(f"{self.base_url}/{genre}")
-        soup = BeautifulSoup(html, 'html.parser')
-        mangas = []
-
-        for item in soup.select('.content-genres-item'):
-            title = item.select_one('.genres-item-name').text
-            img = item.select_one('img')['src']
-            chapters = item.select_one('.genres-item-chap').text
-            mangas.append({
-                "title": title,
-                "img": img,
-                "latestChapter": chapters,
-                # Add more fields as per your original code
-            })
-
-        return mangas
-
-
 class MangaClashScraper(BaseScraper):
     async def scrape(self, genre: Optional[str] = None):
         genre = genre or 'genre'  # Default genre
@@ -229,3 +207,43 @@ class MangaClashScraper(BaseScraper):
             })
 
         return mangas
+
+
+class MangaKissScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class KissMangaScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class ManhuaTopScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class MangaParkIoScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class MangaParkNetScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class ManhuaFastScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class RMangaScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
+
+
+class ReadMangaScraper(BaseScraper):
+    # Implement similar to ManganeloScraper
+    pass
