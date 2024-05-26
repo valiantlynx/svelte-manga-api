@@ -326,9 +326,15 @@ class MangaClashScraper(BaseScraper):
         }
 
     async def search_manga(self, word: str, page: int = 1):
-        search_url = f"{
-            self.base_url}/page/{page}/?s={word}&post_type=wp-manga"
-        html = await self.fetch_html(search_url)
+        search_url = f"{self.base_url}/?s={word}&post_type=wp-manga"
+        # Use httpx to handle the redirection
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(search_url)
+            if response.status_code == 301:
+                logging.warning(f"Redirected to {response.headers['location']}")
+            response.raise_for_status()
+            html = response.text
+
         soup = BeautifulSoup(html, 'html.parser')
 
         search_results = []
@@ -347,7 +353,7 @@ class MangaClashScraper(BaseScraper):
             description = descriptionElement.text.strip(
             ) if descriptionElement else "No description"
 
-            mangaId = src.split('/')[-1] if src else "No ID"
+            mangaId = src.split('/')[-2] if src else "No ID"
 
             search_results.append({
                 "title": title,
