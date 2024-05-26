@@ -291,24 +291,33 @@ class MangaClashScraper(BaseScraper):
         }
 
     async def get_chapter_details(self, manga_id: str, chapter_id: str):
-        chapter_url = f"{this.base_url}/manga/{manga_id}/{chapter_id}"
-        html = await self.fetch_html(chapter_url)
-        soup = BeautifulSoup(html, 'html.parser')
+        chapter_url = f"{self.base_url}/manga/{manga_id}/{chapter_id}"
+        # Use httpx to handle the redirection
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(chapter_url)
+            if response.status_code == 301:
+                logging.warning(f"Redirected to {response.headers['location']}")
+            response.raise_for_status()
+            html = response.text
 
-        title = soup.select_one('.reading-content .chapter-title').text.strip()
+        soup = BeautifulSoup(html, 'html.parser')
+        logging.warning(f"----------> {soup.select_one('#chapter-heading')}")
+        title_element = soup.select_one('#chapter-heading')
+        title = title_element.text.strip() if title_element else "No title found"
+
         images = soup.select('.reading-content .page-break img')
 
         image_data = []
         for index, img in enumerate(images, start=1):
             # Use 'data-src' if available, otherwise fallback to 'src'
-            image_url = img.get('data-src', '')
+            image_url = img.get('data-src', '').strip()
             image_data.append({
                 "imageUrl": image_url,
                 "pageNumber": index,
                 "totalPages": len(images)
             })
 
-        manga = await this.get_manga_details(manga_id)
+        manga = await self.get_manga_details(manga_id)
 
         return {
             "title": title,
