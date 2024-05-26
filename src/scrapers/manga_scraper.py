@@ -1,21 +1,24 @@
 from .base_scraper import BaseScraper
 from bs4 import BeautifulSoup
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime
 import re
+import logging
+import httpx
+
 
 def parse_date(date_str):
     # Define multiple formats to try
     date_formats = [
-        "%b %d,%Y - %H:%M %p", # Adjusted for 24-hour format and AM/PM
-        "%b %d, %Y - %H:%M %p", # Adjusted for space after the comma and 24-hour format
-        "%b %d,%Y - %I:%M %p", # Your original format
+        "%b %d,%Y - %H:%M %p",  # Adjusted for 24-hour format and AM/PM
+        "%b %d, %Y - %H:%M %p",  # Adjusted for space after the comma and 24-hour format
+        "%b %d,%Y - %I:%M %p",  # Your original format
         # Add more formats as necessary
     ]
-    
+
     # Remove any potential extra spaces (for more robust parsing)
     date_str = re.sub(r'\s+', ' ', date_str)
-    
+
     for fmt in date_formats:
         try:
             return datetime.strptime(date_str, fmt)
@@ -85,7 +88,8 @@ class ManganeloScraper(BaseScraper):
             '#panel-story-info-description').text.strip()
 
         # Remove "Description :" if it's at the beginning using regex
-        description = re.sub(r'^Description\s*:\s*', '', description_raw, flags=re.IGNORECASE)
+        description = re.sub(r'^Description\s*:\s*', '',
+                             description_raw, flags=re.IGNORECASE)
 
         # Extracting authors and genres
         all_elements = [elem.text.strip()
@@ -97,7 +101,8 @@ class ManganeloScraper(BaseScraper):
         rating = float(rating_element.text) if rating_element else None
 
         # Extracting and converting last updated date
-        lastUpdated_text = soup.select_one('.story-info-right-extent p:nth-of-type(1) .stre-value').text.strip()
+        lastUpdated_text = soup.select_one(
+            '.story-info-right-extent p:nth-of-type(1) .stre-value').text.strip()
         lastUpdated = parse_date(lastUpdated_text)
 
         # Extracting and converting views
@@ -126,16 +131,18 @@ class ManganeloScraper(BaseScraper):
 
     async def get_chapter_details(self, manga_id: str, chapter_id: str):
         # Construct the chapter URL based on manga_id and chapter_id
-        chapter_url = f"{self.base_url}/chapter/{manga_id}/{chapter_id}"  # Adjust as necessary
+        # Adjust as necessary
+        chapter_url = f"{self.base_url}/chapter/{manga_id}/{chapter_id}"
         html = await self.fetch_html(chapter_url)
         soup = BeautifulSoup(html, 'html.parser')
 
         title = soup.select_one('.panel-chapter-info-top h1').text
         images = soup.select('.container-chapter-reader img')
-        
+
         image_data = []
         for index, img in enumerate(images, start=1):
-            image_url = img.get('data-src')  # Use 'src' if 'data-src' is not available
+            # Use 'src' if 'data-src' is not available
+            image_url = img.get('data-src')
             image_data.append({
                 "imageUrl": image_url,
                 "pageNumber": index,
@@ -160,7 +167,8 @@ class ManganeloScraper(BaseScraper):
         for item in soup.select('.search-story-item'):
             titleElement = item.select_one('.item-title')
             imgElement = item.select_one('img')
-            chaptersElement = item.select_one('.item-title')  # Assuming this is correct; adjust if needed
+            # Assuming this is correct; adjust if needed
+            chaptersElement = item.select_one('.item-title')
             srcElement = item.select_one('a')
             authorElement = item.select_one('.item-author')
 
@@ -188,25 +196,157 @@ class ManganeloScraper(BaseScraper):
 
 
 class MangaClashScraper(BaseScraper):
-    async def scrape(self, genre: Optional[str] = None):
-        genre = genre or 'genre'  # Default genre
+    async def scrape(self, page: Optional[int] = None, genre: Optional[str] = None, type: Optional[str] = None):
+        # Apply default values if None
+        page = page or '1'
+        genre = genre or 'latest'
 
-        html = await self.fetch_html(f"{self.base_url}/{genre}")
+        url = f"{self.base_url}/manga/page/{page}/?m_orderby={genre}"
+        logging.warning(f"rrrrr ------ {url}")
+        # Use httpx to handle the redirection
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url)
+            logging.warning(f"rrrrr ------ {response}")
+            if response.status_code == 301:
+                logging.warning(f"Redirected to {response.headers['location']}")
+            response.raise_for_status()
+            html = response.text
+
         soup = BeautifulSoup(html, 'html.parser')
+
         mangas = []
 
         for item in soup.select('.list-truyen-item-wrap'):
-            title = item.select_one('.genres-item-name').text
-            img = item.select_one('img')['src']
-            chapters = item.select_one('.list-story-item-wrap-chapter').text
+            titleElement = item.select_one('h3 a')
+            imgElement = item.select_one('img')
+            latestChapterElement = item.select_one(
+                '.list-story-item-wrap-chapter a')
+            descriptionElement = item.select_one('.list-story-item-wrap-1 p')
+
+            title = titleElement.text.strip() if titleElement else "No title"
+            img = imgElement.get('data-src', '') if imgElement else "No image"
+            latestChapter = latestChapterElement.text.strip(
+            ) if latestChapterElement else "No chapters"
+            src = titleElement['href'] if titleElement else "No source"
+            description = descriptionElement.text.strip(
+            ) if descriptionElement else "No description"
+
+            mangaId = src.split('/')[-1] if src else "No ID"
+
             mangas.append({
                 "title": title,
                 "img": img,
-                "latestChapter": chapters,
-                # Add more fields as per your original code
+                "latestChapter": latestChapter,
+                "src": src,
+                "mangaId": mangaId,
+                "description": description,
             })
 
         return mangas
+
+    async def get_manga_details(self, manga_id: str):
+        url = f"{self.base_url}/manga/{manga_id}"
+        html = await self.fetch_html(url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        title = soup.select_one('.post-title h1').text.strip()
+        img = soup.select_one('.summary_image img')['src']
+        description_raw = soup.select_one('.description-summary').text.strip()
+
+        # Remove "Description :" if it's at the beginning using regex
+        description = re.sub(r'^Description\s*:\s*', '',
+                             description_raw, flags=re.IGNORECASE)
+
+        authors = [a.text.strip() for a in soup.select('.author-content a')]
+        genres = [g.text.strip() for g in soup.select('.genres-content a')]
+
+        rating_element = soup.select_one('.summary-content.vote .total_votes')
+        rating = float(rating_element.text) if rating_element else None
+
+        lastUpdated_text = soup.select_one('.post-status .summary-content')
+        lastUpdated = parse_date(
+            lastUpdated_text.text.strip()) if lastUpdated_text else None
+
+        chapters = [{
+            "src": c.select_one('a')['href'],
+            "chapterId": c.select_one('a')['href'].split('/')[-1],
+            "chapterTitle": c.select_one('.chapter-title').text.strip(),
+        } for c in soup.select('.wp-manga-chapter')]
+
+        return {
+            "title": title,
+            "img": img,
+            "description": description,
+            "authors": authors,
+            "rating": rating,
+            "genres": genres,
+            "lastUpdated": lastUpdated.strftime("%Y-%m-%d %H:%M") if lastUpdated else "Unknown",
+            "chapters": chapters,
+        }
+
+    async def get_chapter_details(self, manga_id: str, chapter_id: str):
+        chapter_url = f"{this.base_url}/manga/{manga_id}/{chapter_id}"
+        html = await self.fetch_html(chapter_url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        title = soup.select_one('.reading-content .chapter-title').text.strip()
+        images = soup.select('.reading-content .page-break img')
+
+        image_data = []
+        for index, img in enumerate(images, start=1):
+            # Use 'data-src' if available, otherwise fallback to 'src'
+            image_url = img.get('data-src', '')
+            image_data.append({
+                "imageUrl": image_url,
+                "pageNumber": index,
+                "totalPages": len(images)
+            })
+
+        manga = await this.get_manga_details(manga_id)
+
+        return {
+            "title": title,
+            "images": image_data,
+            "manga": manga
+        }
+
+    async def search_manga(self, word: str, page: int = 1):
+        search_url = f"{
+            self.base_url}/page/{page}/?s={word}&post_type=wp-manga"
+        html = await self.fetch_html(search_url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        search_results = []
+        for item in soup.select('.c-tabs-item__content'):
+            titleElement = item.select_one('.post-title h3 a')
+            imgElement = item.select_one('img')
+            latestChapterElement = item.select_one('.latest-chap .chapter a')
+            descriptionElement = item.select_one(
+                '.post-content .post-summary p')
+
+            title = titleElement.text.strip() if titleElement else "No title"
+            img = imgElement.get('data-src', '') if imgElement else "No image"
+            latestChapter = latestChapterElement.text.strip(
+            ) if latestChapterElement else "No chapters"
+            src = titleElement['href'] if titleElement else "No source"
+            description = descriptionElement.text.strip(
+            ) if descriptionElement else "No description"
+
+            mangaId = src.split('/')[-1] if src else "No ID"
+
+            search_results.append({
+                "title": title,
+                "img": img,
+                "latestChapter": latestChapter,
+                "src": src,
+                "mangaId": mangaId,
+                "description": description,
+            })
+
+        return {
+            "page": page,
+            "mangas": search_results
+        }
 
 
 class MangaKissScraper(BaseScraper):

@@ -44,18 +44,19 @@ async def get_manga(server: str = Query(default='MANGANELO'), genre: Optional[st
         "READMANGA": ReadMangaScraper,
     }
 
+    try:
+        # Fetch the base URL from environment variables
+        base_url = os.getenv(server)
+        if base_url is None or server not in server_map:
+            raise HTTPException(status_code=404, detail="Server not found")
 
-
-    # Fetch the base URL from environment variables
-    base_url = os.getenv(server)
-    if base_url is None or server not in server_map:
-        raise HTTPException(status_code=404, detail="Server not found")
-
-    scraper_class = server_map[server]
-    scraper = scraper_class(base_url)
-    # Pass optional parameters directly to the scrape method, which will handle defaults
-    mangas = await scraper.scrape(genre=genre, page=page, type=type)
-    return {"mangas": mangas}
+        scraper_class = server_map[server]
+        scraper = scraper_class(base_url)
+        # Pass optional parameters directly to the scrape method, which will handle defaults
+        mangas = await scraper.scrape(genre=genre, page=page, type=type)
+        return {"mangas": mangas}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/manga/{manga_id}")
@@ -72,7 +73,6 @@ async def get_manga_details(server: str = Query(default='MANGANELO'), manga_id: 
         "RMANGA": RMangaScraper,
         "READMANGA": ReadMangaScraper,
     }
-
 
     base_url = os.getenv(server)
     if base_url is None or server not in server_map:
@@ -98,7 +98,6 @@ async def get_manga_chapter_details(manga_id: str = Path(..., example="manga-tf9
         "RMANGA": RMangaScraper,
         "READMANGA": ReadMangaScraper,
     }
-
 
     base_url = os.getenv(server)
 
@@ -126,7 +125,6 @@ async def search_manga(word: str = Query(..., example="eternal"), page: Optional
         "RMANGA": RMangaScraper,
         "READMANGA": ReadMangaScraper,
     }
-
 
     base_url = os.getenv(server)
 
