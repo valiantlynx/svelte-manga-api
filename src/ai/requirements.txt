@@ -1,0 +1,12 @@
+edge_tts
+pygame
+pyaudio
+numpy
+unstructured
+faster_whisper 
+scipy
+langchain
+langchain-community
+sentence-transformers
+chromadb
+ollama
