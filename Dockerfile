@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     portaudio19-dev \
     libsdl2-dev \
+    alsa-utils \
+    pulseaudio \
     git \
     curl \
     wget \
