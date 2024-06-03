@@ -3,11 +3,23 @@ FROM python:3.12-slim
 WORKDIR /code 
 
 COPY ./requirements.txt ./
-RUN apt-get update && apt-get install git -y && apt-get install curl -y && apt-get install wget -y && apt-get install unzip -y
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    portaudio19-dev \
+    libsdl2-dev \
+    alsa-utils \
+    pulseaudio \
+    git \
+    curl \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
  
-RUN python -m venv venv
-RUN chmod +x ./venv/bin/activate && ./venv/bin/activate
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3 -m venv venv
+RUN chmod +x /code/venv/bin/activate && . /code/venv/bin/activate
+RUN pip3 install --upgrade pip \
+    && pip3 install --no-cache-dir -r requirements.txt
 
 COPY ./src ./src
 

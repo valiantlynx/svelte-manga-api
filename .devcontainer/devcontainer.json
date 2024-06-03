@@ -17,7 +17,6 @@
         "aaron-bond.better-comments",
         "formulahendry.auto-rename-tag",
         "formulahendry.code-runner",
-        "github.copilot",
         "github.vscode-pull-request-github",
         "ms-azuretools.vscode-docker",
         "ms-vscode-remote.remote-containers",
@@ -42,5 +41,60 @@
       }
     }
   },
+  
+	////////////////////////////////////
+	// UNCOMMENT to build manually
+	////////////////////////////////////
+	//"build": {
+	//	"dockerfile": "Dockerfile",
+	//	"target": "devcontainer"
+	//},
+
+
+	////////////////////////////////////
+	// Linux Setup (X11)
+	////////////////////////////////////
+    //"mounts": [
+        //"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+    //],
+	//"containerEnv": {},
+
+
+	////////////////////////////////////
+	// Windows Setup (WSL2)
+	////////////////////////////////////
+  //   "mounts": [
+	// 	"source=/mnt/wslg,target=/mnt/wslg,type=bind,consistency=cached"
+  //   ],
+	// "containerEnv": {
+	// 	"PULSE_SERVER": "/mnt/wslg/PulseServer"
+	// },
+
+  	////////////////////////////////////
+	// Windows Setup (ucuntu docker container), after installing pulseaudio on the host machine
+	////////////////////////////////////
+    "mounts": [
+		"source=/dev/snd,target=/dev/snd,type=bind,consistency=cached"
+    ],
+	"containerEnv": {
+		"PULSE_SERVER": "host.docker.internal"
+	},
+
+	////////////////////////////////////
+	// MacOS Setup (X11)
+	// You need to install XQuartz and pulseaudio
+	////////////////////////////////////
+	//"containerEnv": {
+    //  "DISPLAY": "docker.for.mac.host.internal:0",
+	//	"PULSE_SERVER": "docker.for.mac.host.internal:4713"
+    //},
+	//"mounts": [
+	//	"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+	//	"source=${localEnv:HOME}/.config/pulse,target=/home/osdev/.config/pulse,type=bind,consistency=cached"
+    //],
+
   "postCreateCommand": "pip install -r requirements.txt"
+
+	
+
 }
