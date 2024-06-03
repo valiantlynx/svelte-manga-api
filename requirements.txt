@@ -18,6 +18,7 @@ faster_whisper
 scipy
 langchain
 langchain-community
+langchain_core
 sentence-transformers
 chromadb
 ollama
