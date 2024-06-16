@@ -4,7 +4,6 @@ it has docker-compose for development and deploying. it also configured with .de
 
 
 # a dev environment for python
-
 ```bash
 docker-compose up --build -d
 docker-compose down
