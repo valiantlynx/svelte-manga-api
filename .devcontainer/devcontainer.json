@@ -1,8 +1,9 @@
 {
   "name": "svelte-manga-api-dev",
-  "dockerComposeFile": ["../docker-compose.yml"],
-  "service": "fastapi",
-  "workspaceFolder": "/code",
+  "dockerComposeFile": ["../docker-compose.dev.yml"],
+  "service": "svelte-manga-api-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "none",
   "customizations": {
     "vscode": {
       "extensions": [

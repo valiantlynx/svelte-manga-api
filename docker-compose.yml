@@ -4,9 +4,8 @@ services:
     build: .
     ports:
       - 8000:8000
-      - 5678:5678
     volumes:
-      - .:/code
+      - .:/workspace:cached
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
     tty: true
