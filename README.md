@@ -7,7 +7,6 @@ it has docker-compose for development and deploying. it also configured with .de
 docker-compose up --build -d
 docker-compose down
 ```
-
 # (Optional) everything after this is optional (this has changed to include ddns)
 # deployment
 there are two ways. one is simpler using azure container. it just deploys the app to your azure account.
