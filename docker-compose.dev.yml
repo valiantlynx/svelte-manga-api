@@ -18,8 +18,10 @@ services:
               capabilities: [gpu]
     networks:
       - svelte-manga-api
+    depends_on:
+      - chroma
       
-  database:
+  chroma:
     image: ghcr.io/chroma-core/chroma:latest
      # mouting the root folder that contains .git
     volumes:
@@ -29,6 +31,7 @@ services:
     restart: always
     networks:
       - svelte-manga-api
+    
 
 networks:
   svelte-manga-api: # MIGHT NEED TO BE CHANGED. to be under the same network as all the other microservices
