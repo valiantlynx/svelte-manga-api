@@ -1,18 +1,68 @@
-version: '1.0'
+version: '3.8'
+
 services:
-  fastapi:
-    build: .
+  # Development service
+  svelte-manga-api-dev:
+    build:
+      context: .
+      target: dev
     ports:
-      - 8000:8000
+      - 8001:8001
+      - 5173:5173
+      - 5174:5174
+      - 4173:4173
     volumes:
       - .:/workspace:cached
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "uvicorn src.main:app --host=0.0.0.0 --port=8001 --reload"
     restart: always
     tty: true
+    networks:
+      - svelte-manga-api
+    depends_on:
+      - chroma
+    profiles:
+      - dev
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: $GPU_COUNT
               capabilities: [gpu]
+
+  # Production service
+  svelte-manga-api-prod:
+    build:
+      context: .
+      target: prod
+    ports:
+      - 8000:8000
+    restart: always
+    tty: true
+    networks:
+      - svelte-manga-api
+    depends_on:
+      - chroma
+    profiles:
+      - prod
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: $GPU_COUNT
+              capabilities: [gpu]
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    volumes:
+      - ./assets/chroma:/chroma/.chroma/index
+    ports:
+      - 8002:8000
+    restart: always
+    networks:
+      - svelte-manga-api
+
+networks:
+  svelte-manga-api:
+    driver: bridge
