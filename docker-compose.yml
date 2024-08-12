@@ -53,16 +53,6 @@ services:
     #           count: ${GPU_COUNT:-0}
     #           capabilities: [gpu]
 
-  chroma:
-    image: ghcr.io/chroma-core/chroma:latest
-    volumes:
-      - ./assets/chroma:/chroma/.chroma/index
-    ports:
-      - 8002:8000
-    restart: always
-    networks:
-      - svelte-manga-api
-
 networks:
   svelte-manga-api:
     driver: bridge
