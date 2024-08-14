@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "svelte-manga-api"
+    bucket = "whalescanapi"
     key    = "dev/terraform.tfstate"
     region = "eu-north-1"
   }
