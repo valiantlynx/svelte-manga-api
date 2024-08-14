@@ -3,7 +3,6 @@
 it has docker-compose for development and deploying. it also configured with .devcontainer så you can go into the container and work on it from there. another way is it has python environment using the commands in run.sh or run.bat.
 
 # a dev environment for python
-
 ## Environment Variables
 To control GPU usage, you can set environment variables before running docker-compose.
 
