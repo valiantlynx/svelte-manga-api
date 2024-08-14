@@ -20,6 +20,13 @@ services:
     networks:
       - monitoring
 
+  svelte-manga:
+    image: valiantlynx/svelte-manga:latest
+    container_name: svelte-manga
+    restart: always
+    networks:
+      - monitoring
+
   nginx:
     image: nginx:latest
     container_name: nginx

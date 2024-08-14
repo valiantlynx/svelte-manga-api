@@ -5,6 +5,9 @@ from datetime import datetime
 import re
 import logging
 import httpx
+from urllib.parse import urlparse, urlunparse
+import re
+import os
 
 
 def parse_date(date_str):
@@ -206,7 +209,8 @@ class MangaClashScraper(BaseScraper):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(url)
             if response.status_code == 301:
-                logging.warning(f"Redirected to {response.headers['location']}")
+                logging.warning(f"Redirected to {
+                                response.headers['location']}")
             response.raise_for_status()
             html = response.text
 
@@ -219,67 +223,87 @@ class MangaClashScraper(BaseScraper):
             imgElement = item.select_one('img')
             latestChapterElement = item.select_one('.chapter a')
             descriptionElement = item.select_one('.list-story-item-wrap-1 p')
-
             title = titleElement.text.strip() if titleElement else "No title"
+
             img = imgElement.get('data-src', '') if imgElement else "No image"
-            latestChapter = latestChapterElement.text.strip() if latestChapterElement else "No chapters"
+            # Strip the HTTPS domain from the img URL
+            parsed_img_url = urlparse(img)
+            img = urlunparse(('', '', parsed_img_url.path, parsed_img_url.params,
+                             parsed_img_url.query, parsed_img_url.fragment))
+
+            latestChapter = latestChapterElement.text.strip(
+            ) if latestChapterElement else "No chapters"
             src = titleElement['href'] if titleElement else "No source"
-            description = descriptionElement.text.strip() if descriptionElement else "No description"
+            description = descriptionElement.text.strip(
+            ) if descriptionElement else "No description"
 
             # Extract the manga ID by stripping the domain and using the slug
-            mangaId = src.split('/')[-2] if src else "No ID"
+            id = src.split('/')[-2] if src else "No ID"
 
             mangas.append({
                 "title": title,
                 "img": img,
                 "latestChapter": latestChapter,
                 "src": src,
-                "mangaId": mangaId,
+                "id": id,
                 "description": description,
             })
 
         return mangas
 
     async def get_manga_details(self, manga_id: str):
+        # Regular expression pattern to match the image URL
+        img_url_pattern = r'"og:image" content="([^"]*)"'
+
         url = f"{self.base_url}/manga/{manga_id}"
-        # Use httpx to handle the redirection
         async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(url)
             if response.status_code == 301:
-                logging.warning(f"Redirected to {response.headers['location']}")
+                logging.warning(f"Redirected to {
+                                response.headers['location']}")
             response.raise_for_status()
             html = response.text
 
         soup = BeautifulSoup(html, 'html.parser')
 
-        
         title = soup.select_one('.post-title h1').text.strip()
-        img = soup.select_one('.summary_image img')['src']
-        description_raw = soup.select_one('.description-summary').text.strip()
+        # Get the lazy loading image URL
+        lazy_loading_img = soup.select_one('.summary_image img')['src']
 
-        # Remove "Description :" if it's at the beginning using regex
+        # Find the real image URL using regular expressions
+        real_img_match = re.search(img_url_pattern, html)
+        if real_img_match:
+            real_img = real_img_match.group(1)
+        else:
+            # If the real image URL is not found, fallback to the lazy loading image
+            real_img = lazy_loading_img
+
+        # Strip the HTTPS domain from the real image URL
+        parsed_img_url = urlparse(real_img)
+        img = urlunparse(('', '', parsed_img_url.path, parsed_img_url.params,
+                         parsed_img_url.query, parsed_img_url.fragment))
+        img_name = os.path.basename(parsed_img_url.path)
+
+        description_raw = soup.select_one('.description-summary').text.strip()
         description = re.sub(r'^Description\s*:\s*', '',
                              description_raw, flags=re.IGNORECASE)
-
         authors = [a.text.strip() for a in soup.select('.author-content a')]
         genres = [g.text.strip() for g in soup.select('.genres-content a')]
 
         rating_element = soup.select_one('.total_votes')
-        logging.warning(f"---------> {rating_element}")
         rating = float(rating_element.text) if rating_element else None
 
         lastUpdated_text = soup.select_one('.post-status .summary-content')
-        
         lastUpdated = lastUpdated_text.text.strip() if lastUpdated_text else None
         chapters = [{
             "src": c.select_one('a')['href'],
-            "chapterId": c.select_one('a')['href'].split('/')[-2], 
+            "chapterId": c.select_one('a')['href'].split('/')[-2],
             "chapterTitle": c.select_one('a').text.strip(),
-            "new": c.select_one('.c-new-tag')['title'] if c.select_one('.c-new-tag') else None  
+            "new": c.select_one('.c-new-tag')['title'] if c.select_one('.c-new-tag') else None
         } for c in soup.select('.wp-manga-chapter')]
 
-        
         return {
+            "img_name": img_name,
             "title": title,
             "img": img,
             "description": description,
@@ -296,7 +320,8 @@ class MangaClashScraper(BaseScraper):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(chapter_url)
             if response.status_code == 301:
-                logging.warning(f"Redirected to {response.headers['location']}")
+                logging.warning(f"Redirected to {
+                                response.headers['location']}")
             response.raise_for_status()
             html = response.text
 
@@ -331,7 +356,8 @@ class MangaClashScraper(BaseScraper):
         async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(search_url)
             if response.status_code == 301:
-                logging.warning(f"Redirected to {response.headers['location']}")
+                logging.warning(f"Redirected to {
+                                response.headers['location']}")
             response.raise_for_status()
             html = response.text
 

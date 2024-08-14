@@ -2,4 +2,5 @@
     "python.languageServer": "Pylance",
     "python.analysis.extraPaths": ["../"],
     "python.formatting.provider": "prettier",
+    "ansible.python.interpreterPath": "c:\\Users\\gorme\\projects\\valiantlynx-turborepo\\apps\\ollama-docker\\venv\\Scripts\\python.exe",
 }

@@ -3,10 +3,32 @@
 it has docker-compose for development and deploying. it also configured with .devcontainer så you can go into the container and work on it from there. another way is it has python environment using the commands in run.sh or run.bat.
 
 # a dev environment for python
-```bash
-docker-compose up --build -d
-docker-compose down
+
+## Environment Variables
+To control GPU usage, you can set environment variables before running docker-compose.
+
+Without GPU
+```sh
+export GPU_COUNT=0
+docker-compose --profile dev up
+# or for production
+docker-compose --profile prod up
 ```
+
+With GPU
+```sh
+export GPU_COUNT=1
+docker-compose --profile dev up
+# or for production
+docker-compose --profile prod up
+```
+
+### Explanation
+Environment Variables: The GPU_COUNT environment variable determines the number of GPUs to reserve. When set to 0, no GPU is reserved, effectively disabling GPU support.
+Conditional Logic: Docker Compose does not support direct conditional logic, so using environment variables allows you to control resource allocation.
+Deployment Configuration: The deploy.resources.reservations.devices section is included in both development and production services. It uses the GPU_COUNT environment variable to specify the number of GPUs. If GPU_COUNT is 0, it will effectively skip GPU reservation.
+This setup allows you to control GPU usage by simply setting an environment variable, providing flexibility without modifying the Docker Compose file each time.
+
 # (Optional) everything after this is optional (this has changed to include ddns)
 # deployment
 there are two ways. one is simpler using azure container. it just deploys the app to your azure account.

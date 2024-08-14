@@ -1,8 +1,9 @@
 {
   "name": "svelte-manga-api-dev",
   "dockerComposeFile": ["../docker-compose.yml"],
-  "service": "fastapi",
-  "workspaceFolder": "/code",
+  "service": "svelte-manga-api-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "none",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -41,60 +42,53 @@
       }
     }
   },
-  
-	////////////////////////////////////
-	// UNCOMMENT to build manually
-	////////////////////////////////////
-	//"build": {
-	//	"dockerfile": "Dockerfile",
-	//	"target": "devcontainer"
-	//},
 
+  ////////////////////////////////////
+  // UNCOMMENT to build manually
+  ////////////////////////////////////
+  //"build": {
+  //	"dockerfile": "Dockerfile",
+  //	"target": "devcontainer"
+  //},
 
-	////////////////////////////////////
-	// Linux Setup (X11)
-	////////////////////////////////////
-    //"mounts": [
-        //"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-    //],
-	//"containerEnv": {},
+  ////////////////////////////////////
+  // Linux Setup (X11)
+  ////////////////////////////////////
+  //"mounts": [
+  //"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+  //],
+  //"containerEnv": {},
 
-
-	////////////////////////////////////
-	// Windows Setup (WSL2)
-	////////////////////////////////////
+  ////////////////////////////////////
+  // Windows Setup (WSL2)
+  ////////////////////////////////////
   //   "mounts": [
-	// 	"source=/mnt/wslg,target=/mnt/wslg,type=bind,consistency=cached"
+  // 	"source=/mnt/wslg,target=/mnt/wslg,type=bind,consistency=cached"
   //   ],
-	// "containerEnv": {
-	// 	"PULSE_SERVER": "/mnt/wslg/PulseServer"
-	// },
+  // "containerEnv": {
+  // 	"PULSE_SERVER": "/mnt/wslg/PulseServer"
+  // },
 
-  	////////////////////////////////////
-	// Windows Setup (ucuntu docker container), after installing pulseaudio on the host machine
-	////////////////////////////////////
-    "mounts": [
-		"source=/dev/snd,target=/dev/snd,type=bind,consistency=cached"
-    ],
-	"containerEnv": {
-		"PULSE_SERVER": "host.docker.internal"
-	},
+  ////////////////////////////////////
+  // Windows Setup (ucuntu docker container), after installing pulseaudio on the host machine
+  ////////////////////////////////////
+  "mounts": ["source=/dev/snd,target=/dev/snd,type=bind,consistency=cached"],
+  "containerEnv": {
+    "PULSE_SERVER": "host.docker.internal"
+  },
 
-	////////////////////////////////////
-	// MacOS Setup (X11)
-	// You need to install XQuartz and pulseaudio
-	////////////////////////////////////
-	//"containerEnv": {
-    //  "DISPLAY": "docker.for.mac.host.internal:0",
-	//	"PULSE_SERVER": "docker.for.mac.host.internal:4713"
-    //},
-	//"mounts": [
-	//	"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-	//	"source=${localEnv:HOME}/.config/pulse,target=/home/osdev/.config/pulse,type=bind,consistency=cached"
-    //],
+  ////////////////////////////////////
+  // MacOS Setup (X11)
+  // You need to install XQuartz and pulseaudio
+  ////////////////////////////////////
+  //"containerEnv": {
+  //  "DISPLAY": "docker.for.mac.host.internal:0",
+  //	"PULSE_SERVER": "docker.for.mac.host.internal:4713"
+  //},
+  //"mounts": [
+  //	"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
+  //	"source=${localEnv:HOME}/.config/pulse,target=/home/osdev/.config/pulse,type=bind,consistency=cached"
+  //],
 
   "postCreateCommand": "pip install -r requirements.txt"
-
-	
-
 }
