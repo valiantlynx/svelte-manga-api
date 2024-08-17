@@ -5,6 +5,7 @@ it has docker-compose for development and deploying. it also configured with .de
 ## Environment Variables
 To control GPU usage, you can set environment variables before running docker-compose.
 
+
 Without GPU
 ```sh
 export GPU_COUNT=0
