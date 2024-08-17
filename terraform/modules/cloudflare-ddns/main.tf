@@ -18,13 +18,17 @@ locals {
         zone_id = details.zone_id,
         name    = "${subdomain.name}.${domain}",
         type    = subdomain.name == "www" ? "CNAME" : "A",
-        value   = subdomain.name == "www" ? domain : element(var.public_ip, 0)
+        value   = subdomain.name == "www" ? details.cname_target : element(var.public_ip, 0)  # Use details.cname_target for CNAME
       }
     } if details.include_subdomains == true
   ]...)
 
   # Combine root and subdomain records into one map
   combined_dns_records = merge(local.root_dns_records, local.subdomain_dns_records)
+}
+
+output "combined_dns_records" {
+  value = local.combined_dns_records
 }
 
 resource "cloudflare_record" "ec2_dns_records" {
