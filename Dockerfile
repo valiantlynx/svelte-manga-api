@@ -22,7 +22,7 @@ WORKDIR /workspace
 COPY ./requirements.txt ./
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
-
+COPY . .
 # Set environment variables
 ENV MANGANELO="https://ww8.manganelo.tv"
 ENV CHAPMANGANELO="https://chapmanganelo.com"

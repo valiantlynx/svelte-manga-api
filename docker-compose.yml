@@ -15,8 +15,8 @@ services:
     tty: true
     networks:
       - svelte-manga-api
-    depends_on:
-      - chroma
+    # depends_on:
+    #   - chroma
     profiles:
       - dev
     # deploy:
