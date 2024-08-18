@@ -25,8 +25,8 @@ variable "cloudflare_zone_ids" {
   default = {
     "valiantlynx.com" = {
       zone_id = "cc6721eb589ec5e29adc0a306fa5d5fe",
-      service = "nginx", # Example service for the root domain
-      port    = 80,      # Example port for the root domain
+      service = "svelte-manga-api", # Example service for the root domain
+      port    = 8000,      # Example port for the root domain
       subdomains = [
         {
           name    = "svelte-manga-api",
