@@ -6,7 +6,7 @@ locals {
       zone_id = details.zone_id,
       name    = domain,
       type    = "A",
-      value   = element(var.public_ip, 0)
+      content = element(var.public_ip, 0)  # Use 'content' instead of 'value'
     } if details.include_root == true
   }
 
@@ -18,7 +18,7 @@ locals {
         zone_id = details.zone_id,
         name    = "${subdomain.name}.${domain}",
         type    = subdomain.name == "www" ? "CNAME" : "A",
-        value   = subdomain.name == "www" ? domain : element(var.public_ip, 0)
+        content = subdomain.name == "www" ? domain : element(var.public_ip, 0)  # Use 'content' instead of 'value'
       }
     } if details.include_subdomains == true
   ]...)
@@ -33,7 +33,7 @@ resource "cloudflare_record" "ec2_dns_records" {
   zone_id = each.value["zone_id"]
   name    = each.value["name"]
   type    = each.value["type"]
-  value   = each.value["value"]
+  content   = each.value["content"]
   ttl     = 1  # Auto, use a specific TTL if needed
   proxied = false
 }
