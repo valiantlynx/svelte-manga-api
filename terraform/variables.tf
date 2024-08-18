@@ -41,21 +41,7 @@ variable "cloudflare_zone_ids" {
       ],
       include_root = false,
       include_subdomains = true
-    },
-    "animevariant.co" = {
-      zone_id = "008be76e1b822cf4341955374b2fd0be",
-      service = "svelte-manga",
-      port = 3000,
-      subdomains = [
-        {
-          name    = "www",
-          service = "svelte-manga",
-          port    = 3000
-        }
-      ],
-      include_root = true,
-      include_subdomains = true
-    },
+    }
     "animevariant.com" = {
       zone_id = "e2348ce2e55eafb8317c9a111450b6b4",
       service = "svelte-manga",

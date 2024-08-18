@@ -111,7 +111,7 @@
   when: cert_file.stat.exists
 
 - name: Obtain SSL certificates with Certbot if needed
-  command: docker-compose -f docker-compose.certbot.yml run --rm --remove-orphans certbot
+  command: docker-compose -f docker-compose.certbot.yml run --rm certbot
   become: true
   args:
     chdir: "{{ ansible_env.HOME }}/"
