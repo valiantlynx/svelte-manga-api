@@ -64,7 +64,7 @@
     chdir: "{{ ansible_env.HOME }}/" # Ensure this points to where docker-compose.yml is located
 
 - name: Deploy services using Docker Compose
-  command: docker-compose up -d nginx
+  command: docker-compose up -d nginx  --remove-orphans
   become: true # Escalate if necessary for Docker commands
   args:
     chdir: "{{ ansible_env.HOME }}/" # Ensure this points to where docker-compose.yml is located
