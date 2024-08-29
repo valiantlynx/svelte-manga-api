@@ -21,7 +21,6 @@
     group: ubuntu
     mode: '0755'
 
-
 - name: Generate Docker Compose file
   ansible.builtin.template:
     src: "docker/docker-compose.yaml.j2"
@@ -51,7 +50,7 @@
     mode: "0644"
 
 - name: Create 'monitoring' network if it does not exist
-  become: true # Escalate if necessary for Docker commands
+  become: true
   ansible.builtin.command: docker network create monitoring
   register: network_creation
   failed_when: network_creation.rc != 0 and 'already exists' not in network_creation.stderr
@@ -59,16 +58,39 @@
 
 - name: Pull the latest images with Docker Compose
   command: docker-compose pull
-  become: true # Escalate if necessary for Docker commands
+  become: true
   args:
-    chdir: "{{ ansible_env.HOME }}/" # Ensure this points to where docker-compose.yml is located
+    chdir: "{{ ansible_env.HOME }}/"
 
-- name: Deploy services using Docker Compose
-  command: docker-compose up -d nginx  --remove-orphans
-  become: true # Escalate if necessary for Docker commands
+- name: Debug Docker containers after pulling images
+  command: docker ps -a
+  register: docker_ps_pull
+  become: true
   args:
-    chdir: "{{ ansible_env.HOME }}/" # Ensure this points to where docker-compose.yml is located
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
 
+- name: Display Docker containers after pulling images
+  debug:
+    var: docker_ps_pull.stdout_lines
+
+- name: Deploy nginx service using Docker Compose
+  command: docker-compose up -d nginx
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+
+- name: Debug Docker containers after deploying NGINX
+  command: docker ps -a
+  register: docker_ps_up_nginx
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
+
+- name: Display Docker containers after deploying NGINX
+  debug:
+    var: docker_ps_up_nginx.stdout_lines
 
 - name: Build detailed domain list from cloudflare_zone_ids
   ansible.builtin.set_fact:
@@ -103,6 +125,18 @@
     chdir: "{{ ansible_env.HOME }}/"
   when: cert_check.rc == 1
 
+- name: Debug Docker containers after obtaining SSL certificates
+  command: docker ps -a
+  register: docker_ps_certbot
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
+
+- name: Display Docker containers after obtaining SSL certificates
+  debug:
+    var: docker_ps_certbot.stdout_lines
+
 - name: Generate https NGINX configuration with dynamic domain names (switch to HTTPS)
   ansible.builtin.template:
     src: "nginx/https.conf.j2"
@@ -115,17 +149,53 @@
   args:
     chdir: "{{ ansible_env.HOME }}/"
 
+- name: Debug Docker containers after stopping services
+  command: docker ps -a
+  register: docker_ps_down
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
+
+- name: Display Docker containers after stopping services
+  debug:
+    var: docker_ps_down.stdout_lines
+
 - name: Deploy services using Docker Compose
   command: docker-compose up -d
   become: true
   args:
     chdir: "{{ ansible_env.HOME }}/"
 
+- name: Debug Docker containers after final deployment
+  command: docker ps -a
+  register: docker_ps_final
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
+
+- name: Display Docker containers after final deployment
+  debug:
+    var: docker_ps_final.stdout_lines
+
 - name: Delete all hanging stuff
   command: docker system prune -a -f
   become: true
   args:
     chdir: "{{ ansible_env.HOME }}/"
+
+- name: Debug Docker containers after pruning
+  command: docker ps -a
+  register: docker_ps_prune
+  become: true
+  args:
+    chdir: "{{ ansible_env.HOME }}/"
+  ignore_errors: yes
+
+- name: Display Docker containers after pruning
+  debug:
+    var: docker_ps_prune.stdout_lines
 
 - name: Schedule automated certificate renewal
   ansible.builtin.cron:
