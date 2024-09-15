@@ -1,9 +1,6 @@
 # svelte-manga-api
-
 it has docker-compose for development and deploying. it also configured with .devcontainer så you can go into the container and work on it from there. another way is it has python environment using the commands in run.sh or run.bat.
-
 # a dev environment for python
-
 ## Environment Variables
 To control GPU usage, you can set environment variables before running docker-compose.
 
@@ -36,6 +33,7 @@ the 2nd option is more heavy duty but comes with more. while the first is just a
 to choose, its the one in the workflows folder thats active. for azure have the deploy-azure.yml and svelte-manga-api.yml in the folder and the other two in the extra_workflows folder.
 for terraform have the deploy-terraform.yml, detroy.yml and svelte-manga-api.yml in the workflow folder and deploy-azure.yml in the extra_workflows folder
 for both you need docker hub account
+
 # docker hub 
 go to https://hub.docker.com/settings/security and create and copy the token. together with your username go to (your repository)https://github.com/valiantlynx/svelte-manga-api/settings/secrets/actions and make these repository secrets
 - DOCKER_HUB_USERNAME = your username

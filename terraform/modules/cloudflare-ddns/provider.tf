@@ -7,5 +7,6 @@ terraform {
   }
 }
 
-provider "cloudflare" {
-}
+// Remove the empty provider block if its empty
+# provider "cloudflare" {
+# }

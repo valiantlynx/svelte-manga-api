@@ -8,20 +8,20 @@ prometheus-fastapi-instrumentator
 pydantic
 opencv-python
 
-#ai
-edge_tts
-pygame
-pyaudio
-numpy
-unstructured
-faster_whisper 
-scipy
-langchain
-langchain-community
-langchain_core
-sentence-transformers
-chromadb
-ollama
+# #ai
+# edge_tts
+# pygame
+# pyaudio
+# numpy
+# unstructured
+# faster_whisper 
+# scipy
+# langchain
+# langchain-community
+# langchain_core
+# sentence-transformers
+# chromadb
+# ollama
 
 
 # recomendation engine
