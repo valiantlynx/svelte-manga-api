@@ -97,3 +97,8 @@ you can look at my git is some of my repos logs to get an idea of how i do or co
 
 now the next time you commit to there is a succesfull pull or push to the main branch and the docker image is on docker hub then terraform with deploy the infra and ansible will configure everything all the way to ssl.
 this means the first time its building it might fail. that cause the domains that certbot is trying to get ssl for might not be pointing to the newly created ec2. you need to go to your dns and point it to the correct ip.
+
+# CRLF to LF
+```sh
+find . -type f -exec dos2unix {} \;
+```
