@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "whalescanapi"
+    bucket = "dorkatha"
     key    = "dev/terraform.tfstate"
     region = "eu-north-1"
   }
