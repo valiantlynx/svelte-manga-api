@@ -298,7 +298,7 @@ async def get_details(id: str):
             genres = text[8:].replace(", ", ",")
         elif span_text == "Other name: ":
             Othername = text[12:]
-
+            
     totalepisode = soup.select_one("#episode_page li:last-child a")["ep_end"]
 
     results = []
