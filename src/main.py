@@ -426,6 +426,274 @@ async def get_list(variable: str, page: int):
         results.append({"title": title, "id": id})
     
     return JSONResponse(content={"list": results})
+
+
+BASE_URL = "https://anitaku.pe"
+AJAX_URL = "https://ajax.gogocdn.net/ajax"
+
+@app.get("/search/")
+async def search(query: str, page: int = 1):
+    async with httpx.AsyncClient() as client:
+        url = f"{BASE_URL}/filter.html?keyword={query}&page={page}"
+        response = await client.get(url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = []
+    has_next_page = bool(soup.select('div.anime_name.new_series > div > div > ul > li.selected').next())
+    
+    for item in soup.select('div.last_episodes > ul > li'):
+        results.append({
+            'id': item.select_one('p.name > a').get('href').split('/')[2],
+            'title': item.select_one('p.name > a').text,
+            'url': f"{BASE_URL}{item.select_one('p.name > a').get('href')}",
+            'image': item.select_one('div > a > img').get('src'),
+            'releaseDate': item.select_one('p.released').text.strip().replace('Released: ', ''),
+            'subOrDub': 'DUB' if '(dub)' in item.select_one('p.name > a').text.lower() else 'SUB'
+        })
+    
+    return {"currentPage": page, "hasNextPage": has_next_page, "results": results}
+
+
+@app.get("/anime/{id}/")
+async def fetch_anime_info(id: str):
+    url = f"{BASE_URL}/category/{id}" if not id.startswith(BASE_URL) else id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    anime_info = {
+        'id': id.split('/')[-1],
+        'title': soup.select_one('div.anime_info_body_bg > h1').text.strip(),
+        'image': soup.select_one('div.anime_info_body_bg > img').get('src'),
+        'releaseDate': soup.select_one('div.anime_info_body_bg > p:nth-child(8)').text.split('Released: ')[1],
+        'description': soup.select_one('div.anime_info_body_bg > div:nth-child(6)').text.strip().replace('Plot Summary: ', ''),
+        'genres': [a.text for a in soup.select('div.anime_info_body_bg > p:nth-child(7) > a')],
+        'totalEpisodes': int(soup.select_one('#episode_page > li:last-child > a').get('ep_end', '0'))
+    }
+
+    episodes = []
+    async with httpx.AsyncClient() as client:
+        episode_list_url = f"{AJAX_URL}/load-list-episode?ep_start=1&ep_end={anime_info['totalEpisodes']}&id={id}&alias="
+        episode_res = await client.get(episode_list_url)
+    ep_soup = BeautifulSoup(episode_res.text, 'html.parser')
+
+    for ep in ep_soup.select('#episode_related > li'):
+        episodes.append({
+            'id': ep.select_one('a').get('href').split('/')[1],
+            'number': ep.select_one('div.name').text.replace('EP ', ''),
+            'url': f"{BASE_URL}/{ep.select_one('a').get('href').strip()}"
+        })
+    
+    anime_info['episodes'] = episodes
+    return anime_info
+
+
+@app.get("/episode/{episode_id}/sources/")
+async def fetch_episode_sources(episode_id: str, server: str = "GogoCDN"):
+    episode_url = f"{BASE_URL}/{episode_id}" if not episode_id.startswith("http") else episode_id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(episode_url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    iframe_src = soup.select_one('#load_anime > div > div > iframe').get('src')
+    sources = []
+    
+    if server == "GogoCDN":
+        # Here you would extract sources from the GogoCDN extractor logic (implement separately)
+        sources = ["source_from_gogo_cdn"]
+    
+    download_link = soup.select_one('.dowloads > a').get('href')
+    return {"sources": sources, "download": download_link}
+
+
+@app.get("/episode/{episode_id}/servers/")
+async def fetch_episode_servers(episode_id: str):
+    episode_url = f"{BASE_URL}/{episode_id}" if not episode_id.startswith(BASE_URL) else episode_id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(episode_url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    servers = []
+    
+    for server in soup.select('div.anime_video_body > div.anime_muti_link > ul > li'):
+        url = server.select_one('a').get('data-video')
+        if not url.startswith('http'):
+            url = f"https:{url}"
+        servers.append({
+            'name': server.select_one('a').text.strip(),
+            'url': url
+        })
+    
+    return servers
+
+
+@app.get("/recent/")
+async def fetch_recent_episodes(page: int = 1, type: int = 1):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{AJAX_URL}/page-recent-release.html?page={page}&type={type}")
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    recent_episodes = []
+
+    for item in soup.select('div.last_episodes.loaddub > ul > li'):
+        recent_episodes.append({
+            'id': item.select_one('a').get('href').split('/')[1].split('-episode')[0],
+            'episodeId': item.select_one('a').get('href').split('/')[1],
+            'episodeNumber': item.select_one('p.episode').text.replace('Episode ', ''),
+            'title': item.select_one('p.name > a').text,
+            'image': item.select_one('div > a > img').get('src'),
+            'url': f"{BASE_URL}{item.select_one('a').get('href')}"
+        })
+    
+    has_next_page = not soup.select('div.anime_name_pagination.intro > div > ul > li').last().has_class('selected')
+    return {"currentPage": page, "hasNextPage": has_next_page, "results": recent_episodes}
+
+
+@app.get("/genre/{genre}/")
+async def fetch_genre_info(genre: str, page: int = 1):
+    url = f"{BASE_URL}/genre/{genre}?page={page}"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    genre_info = []
+
+    for item in soup.select('div.last_episodes > ul > li'):
+        genre_info.append({
+            'id': item.select_one('p.name > a').get('href').split('/')[2],
+            'title': item.select_one('p.name > a').text,
+            'image': item.select_one('div > a > img').get('src'),
+            'releaseDate': item.select_one('p.released').text.replace('Released: ', ''),
+            'url': f"{BASE_URL}/{item.select_one('p.name > a').get('href')}"
+        })
+
+    has_next_page = not soup.select('div.anime_name_pagination > div > ul > li').last().has_class('selected')
+    return {"currentPage": page, "hasNextPage": has_next_page, "results": genre_info}
+
+
+@app.get("/top-airing/")
+async def fetch_top_airing(page: int = 1):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{AJAX_URL}/page-recent-release-ongoing.html?page={page}")
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    top_airing = []
+
+    for item in soup.select('div.added_series_body.popular > ul > li'):
+        top_airing.append({
+            'id': item.select_one('a:nth-child(1)').get('href').split('/')[2],
+            'title': item.select_one('a:nth-child(2)').text.split(',')[0].strip(),
+            'image': item.select_one('a:nth-child(1) > div').get('style').match('(https?://.*.(?:png|jpg))')[0],
+            'episodeId': item.select_one('p:nth-of-type(2) > a').get('title'),
+            'episodeNumber': item.select_one('p:nth-of-type(2) > a').text.replace('Episode ', '')
+        })
+
+    has_next_page = not soup.select('div.anime_name.comedy > div > div > ul > li').last().has_class('selected')
+    return {"currentPage": page, "hasNextPage": has_next_page, "results": top_airing}
+
+
+@app.get("/movies/recent/")
+async def fetch_recent_movies(page: int = 1):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{AJAX_URL}/page-recent-release.html?page={page}&type=2")
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    recent_movies = []
+
+    for item in soup.select('div.last_episodes > ul > li'):
+        recent_movies.append({
+            'id': item.select_one('p.name > a').get('href').split('/')[2],
+            'title': item.select_one('p.name > a').text,
+            'image': item.select_one('div > a > img').get('src'),
+            'releaseDate': item.select_one('p.released').text.strip().replace('Released: ', ''),
+            'url': f"{BASE_URL}{item.select_one('p.name > a').get('href')}"
+        })
+
+    has_next_page = not soup.select('div.anime_name_pagination > div > ul > li').last().has_class('selected')
+    return {"currentPage": page, "hasNextPage": has_next_page, "results": recent_movies}
+
+
+@app.get("/episode/{episode_id}/anime-id/")
+async def fetch_anime_id_from_episode_id(episode_id: str):
+    episode_url = f"{BASE_URL}/{episode_id}" if not episode_id.startswith(BASE_URL) else episode_id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(episode_url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    anime_link = soup.select_one('div.anime_video_body > div.anime_muti_link > a').get('href')
+    
+    anime_id = anime_link.split('/')[-2]
+    return {"animeId": anime_id}
+
+
+@app.get("/popular/")
+async def fetch_popular(page: int = 1):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{BASE_URL}/popular.html?page={page}")
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    popular_anime = []
+
+    for item in soup.select('div.last_episodes > ul > li'):
+        popular_anime.append({
+            'id': item.select_one('p.name > a').get('href').split('/')[2],
+            'title': item.select_one('p.name > a').text,
+            'image': item.select_one('div > a > img').get('src'),
+            'releaseDate': item.select_one('p.released').text.strip().replace('Released: ', ''),
+            'url': f"{BASE_URL}{item.select_one('p.name > a').get('href')}"
+        })
+
+    return {"results": popular_anime}
+
+@app.get("/genres/")
+async def fetch_genre_list():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(BASE_URL)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    genre_list = []
+
+    for genre in soup.select('div.menu_series.genre > ul > li > a'):
+        genre_list.append({
+            'genre': genre.text.strip(),
+            'url': f"{BASE_URL}{genre.get('href')}"
+        })
+
+    return {"genres": genre_list}
+
+
+@app.get("/episode/{episode_id}/download/")
+async def fetch_direct_download_link(episode_id: str):
+    episode_url = f"{BASE_URL}/{episode_id}" if not episode_id.startswith(BASE_URL) else episode_id
+    async with httpx.AsyncClient() as client:
+        response = await client.get(episode_url)
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    download_link = soup.select_one('.dowloads > a').get('href')
+    
+    return {"download": download_link}
+
+
+@app.get("/anime-list/")
+async def fetch_anime_list(page: int = 1):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{BASE_URL}/anime-list.html?page={page}")
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    anime_list = []
+
+    for item in soup.select('div.anime_list_body > ul > li'):
+        anime_list.append({
+            'id': item.select_one('a').get('href').split('/')[2],
+            'title': item.select_one('a').text.strip(),
+            'url': f"{BASE_URL}{item.select_one('a').get('href')}"
+        })
+
+    return {"currentPage": page, "results": anime_list}
+
+
+
 ############################## end ######################333
 
 @app.get("/")
