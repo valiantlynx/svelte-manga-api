@@ -18,6 +18,7 @@ load_dotenv()
 app = FastAPI()
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+print("ALLOWED_ORIGINS:",  allowed_origins)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
