@@ -11,7 +11,3 @@ class BaseScraper(ABC):
             response = await client.get(url)
             response.raise_for_status()
             return response.text
-
-    @abstractmethod
-    async def scrape(self, *args, **kwargs):
-        pass
